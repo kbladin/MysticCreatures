@@ -1,6 +1,18 @@
 #include <iostream>
+#include "Creature.h"
+#include "Edge.h"
+#include "SimWorld.h"
 
-int main() {
-	std::cout << "BAJS PÅ DIG" << std::endl;
+int main()
+{
+	SimWorld world;
+	Creature creature;
+
+	do
+	{
+		creature.SimulateNextStep(&world, 0.001);
+	}
+	while(true);
+
 	return 0;
 }

@@ -46,7 +46,7 @@ file(GLOB MysticCreatures_lib_HEADERS ${PROJECT_SOURCE_DIR}/include/*.h)
 # We do not want main.cpp in the library
 file(GLOB to_remove ${PROJECT_SOURCE_DIR}/src/main.cpp)
 list(REMOVE_ITEM MysticCreatures_lib_SOURCES ${to_remove})
-list(REMOVE_ITEM MysticCreatures_lib_HEADERS ${to_remove})
+#list(REMOVE_ITEM MysticCreatures_lib_HEADERS ${to_remove})
 add_library(MysticCreatures_lib ${MysticCreatures_lib_SOURCES} ${MysticCreatures_lib_HEADERS})
 
 # Creating our executable
