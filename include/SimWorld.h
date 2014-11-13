@@ -1,12 +1,20 @@
 #ifndef SIMWORLD_H
 #define SIMWORLD_H
 
+#include "glm/glm.hpp"
+
 class SimWorld
 {
 private:
+	glm::vec2 current_;
+	glm::vec2 target_position_;
 public:
 	SimWorld();
-	~SimWorld();	
+	~SimWorld();
+
+	glm::vec2 GetCurrent(glm::vec2 position);
+	glm::vec2 GetTargetPosition();
+	void Draw();
 };
 
 #endif

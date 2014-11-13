@@ -23,8 +23,16 @@ public:
 	void SetVertices(Vertex* v1, Vertex* v2)
 		{vert1_ = v1; vert2_ = v2;}
 
-	glm::vec2 GetForce(SimWorld* world);
+	float GetLength(){ return length_;}
+	float GetCurrentLength();
+	glm::vec2 GetSpringForce(SimWorld* world);
+	glm::vec2 GetFluidResistanceForceVert1(SimWorld* world);
+	glm::vec2 GetFluidResistanceForceVert2(SimWorld* world);
+	glm::vec2 GetDirection();
 	void AddForceToVertices(glm::vec2 force);
+	void AddForceToVert1(glm::vec2 force);
+	void AddForceToVert2(glm::vec2 force);
+	void AddNormalToVertices(glm::vec2 n);
 
 	void Draw();
 

@@ -58,6 +58,9 @@ add_executable(MysticCreatures src/main.cpp)
 # C++11 compatability
 set_target_properties(MysticCreatures PROPERTIES COMPILE_FLAGS "-std=c++11")
 
+#list( APPEND CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS} -g -ftest-coverage -fprofile-arcs")
+
+
 # Link all the libraries (including our own)
 target_link_libraries(MysticCreatures MysticCreatures_lib ${OPENGL_LIBRARIES} ${OPENGL_glu_LIBRARY} ${GLEW_LIBRARY} ${GLFW_LIBRARIES})
 

@@ -18,11 +18,12 @@ public:
 	Vertex();
 	~Vertex();
 
-	glm::vec2 GetPosition() { return position_; }
+	glm::vec2 GetPosition() const { return position_; }
 	glm::vec2 GetVelocity() { return velocity_; }
+	glm::vec2 GetNormal() { return normal_; }
 	glm::vec2 GetForce() { return force_; }
 	float GetMass() { return mass_; }
-	float GerFluidFrictionConstant() { return fluid_friction_constant_; }
+	float GetFluidFrictionConstant() { return fluid_friction_constant_; }
 
 	void SetPosition(glm::vec2 position) { position_ = position; }
 	void SetVelocity(glm::vec2 velocity) { velocity_ = velocity; }
@@ -31,7 +32,10 @@ public:
 		{ fluid_friction_constant_ = fluid_friction_constant; }
 
 	void ZeroForce() {force_ = glm::vec2(0.0f, 0.0f);}
+	void ZeroNormal() {normal_ = glm::vec2(0.0f, 0.0f);}
 	void AddForce(glm::vec2 force) {force_ += force;}
+	void AddNormal(glm::vec2 normal) {normal_ += normal;}
+	void NormalizeNormal();
 	glm::vec2  GetNextVelocity(float dt);
 	glm::vec2  GetNextPosition(float dt);
 };

@@ -20,3 +20,9 @@ glm::vec2 Vertex::GetNextPosition(float dt)
 {
 	return position_ + velocity_ * dt;
 }
+
+void Vertex::NormalizeNormal()
+{
+	if (normal_ != glm::vec2(0.0f,0.0f))
+		normal_ = glm::normalize(normal_);
+}
