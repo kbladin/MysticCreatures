@@ -41,7 +41,7 @@ void Creature::InstantiateSimpleCreature()
 		for (int i = 0; i < edges_[buffer_index].size(); ++i)
 		{
 			edges_[buffer_index][i].SetSpringConstant(1.0f);
-			edges_[buffer_index][i].SetDamperConstant(1.0f);
+			edges_[buffer_index][i].SetDamperConstant(0.1f);
 			edges_[buffer_index][i].SetLength(0.2f);
 		}
 	}
@@ -59,9 +59,9 @@ void Creature::SimulateNextStep(SimWorld* world, float dt)
 
 	Draw();
 
-	DebugPrint();
+	//DebugPrint();
 
-	SwapBuffers();
+	//SwapBuffers();
 }
 
 void Creature::SwapBuffers()
@@ -72,15 +72,21 @@ void Creature::SwapBuffers()
 
 void Creature::Draw()
 {
-
+	for (int i = 0; i < edges_[read_buffer_].size(); ++i)
+	{
+		edges_[read_buffer_][i].Draw();
+	}
 }
 
 void Creature::DebugPrint()
 {
 	for (int i = 0; i < vertices_[read_buffer_].size(); ++i)
 	{
-		float x = vertices_[read_buffer_][i].GetForce().x;
-		float y = vertices_[read_buffer_][i].GetForce().y;
+		float x = vertices_[read_buffer_][i].GetPosition().x;
+		float y = vertices_[read_buffer_][i].GetPosition().y;
+
+				//glm::vec2 f = vertices_[read_buffer_][i].GetPosition();
+		//std::cout << "Force " << i << ": (" << f.x << " , " << f.y << ")" << std::endl;
 
 		std::cout << "Vertex " << i << ": (" << x << " , " << y << ")" << std::endl;
 	}
@@ -94,7 +100,8 @@ void Creature::AddWorldForces(SimWorld* world)
 	for (int i=0; i < edges_[read_buffer_].size(); ++i)
 	{
 		glm::vec2 f = edges_[read_buffer_][i].GetForce(world);
-		edges_[write_buffer_][i].AddForceToVertices(f);
+
+		edges_[read_buffer_][i].AddForceToVertices(f);
 	}
 }
 
@@ -108,9 +115,9 @@ void Creature::UpdateState(float dt)
 	for (int i = 0; i < vertices_[read_buffer_].size(); ++i)
 	{
 
-		vertices_[read_buffer_][i].SetVelocity(vertices_[write_buffer_][i].GetNextVelocity(dt));
-		vertices_[read_buffer_][i].SetPosition(vertices_[write_buffer_][i].GetNextPosition(dt));
+		vertices_[read_buffer_][i].SetVelocity(vertices_[read_buffer_][i].GetNextVelocity(dt));
+		vertices_[read_buffer_][i].SetPosition(vertices_[read_buffer_][i].GetNextPosition(dt));
 
-		vertices_[write_buffer_][i].ZeroForce();
+		vertices_[read_buffer_][i].ZeroForce();
 	}
 }

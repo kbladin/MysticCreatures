@@ -26,6 +26,8 @@ public:
 	glm::vec2 GetForce(SimWorld* world);
 	void AddForceToVertices(glm::vec2 force);
 
+	void Draw();
+
 };
 
 #endif
