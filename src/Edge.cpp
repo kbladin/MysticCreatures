@@ -8,7 +8,7 @@
 
 Edge::Edge()
 {
-
+	on_edge_ = false;
 }
 
 Edge::~Edge()
@@ -85,8 +85,15 @@ void Edge::AddNormalToVertices(glm::vec2 n)
 
 void Edge::Draw()
 {
-	glBegin(GL_LINE_STRIP);
-		glVertex2f(vert1_->GetPosition().x, vert1_->GetPosition().y);
-		glVertex2f(vert2_->GetPosition().x, vert2_->GetPosition().y);
-	glEnd();
+	if (on_edge_)
+	{
+		glColor3f(0.0f,1.0f,1.0f);
+		glBegin(GL_LINE_STRIP);
+			glVertex2f(vert1_->GetPosition().x, vert1_->GetPosition().y);
+			glVertex2f(vert2_->GetPosition().x, vert2_->GetPosition().y);
+		glEnd();
+	}
+	else
+		glColor3f(1.0f,1.0f,1.0f);
+
 }

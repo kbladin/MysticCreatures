@@ -33,6 +33,7 @@ public:
 
 	void ZeroForce() {force_ = glm::vec2(0.0f, 0.0f);}
 	void ZeroNormal() {normal_ = glm::vec2(0.0f, 0.0f);}
+	void ZeroVelocity() {velocity_ = glm::vec2(0.0f, 0.0f);}
 	void AddForce(glm::vec2 force) {force_ += force;}
 	void AddNormal(glm::vec2 normal) {normal_ += normal;}
 	void NormalizeNormal();

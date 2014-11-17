@@ -14,6 +14,7 @@ public:
 
 	glm::vec2 GetCurrent(glm::vec2 position);
 	glm::vec2 GetTargetPosition();
+	void SetTargetPosition(glm::vec2 pos);
 	void Draw();
 };
 

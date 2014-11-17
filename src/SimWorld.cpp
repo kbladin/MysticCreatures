@@ -20,6 +20,12 @@ glm::vec2 SimWorld::GetCurrent(glm::vec2 position)
 glm::vec2 SimWorld::GetTargetPosition()
 {
 	return target_position_;
+	//return glm::vec2(-0.5f, -0.5f);
+}
+
+void SimWorld::SetTargetPosition(glm::vec2 pos)
+{
+	target_position_ = pos;
 }
 
 void SimWorld::Draw()

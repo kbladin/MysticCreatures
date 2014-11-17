@@ -3,7 +3,6 @@
 #include <random>
 #include <cmath>
 
-std::default_random_engine FunctionNetwork::generator_;
 
 FunctionNetwork::FunctionNetwork(
 	int input_size,
@@ -13,11 +12,14 @@ FunctionNetwork::FunctionNetwork(
 	hidden_layer_size_(hidden_layer_size),
 	output_size_(output_size)
 {
+  	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+	generator_ = std::default_random_engine(seed);
+
 	// + 1 to include thresholds
 	int n_input_weights = (hidden_layer_size_ + 1) * input_size_;
 	int n_output_weights = (output_size_ + 1) * hidden_layer_size_;
-	input_weights_ = new float[n_input_weights];
-	output_weights_ = new float[n_output_weights];
+	input_weights_.resize(n_input_weights);
+	output_weights_.resize(n_output_weights);
 
   	//std::default_random_engine generator;
 	std::normal_distribution<float> distribution(0.0f,1.0f);
@@ -32,6 +34,7 @@ FunctionNetwork::FunctionNetwork(
 	}
 }
 
+/*
 FunctionNetwork::FunctionNetwork(const FunctionNetwork& f) :
 	input_size_(f.input_size_),
 	hidden_layer_size_(f.hidden_layer_size_),
@@ -54,7 +57,7 @@ FunctionNetwork::FunctionNetwork(const FunctionNetwork& f) :
   {
     output_weights_[i] = f.output_weights_[i];
   }
-}
+}*/
 
 FunctionNetwork::~FunctionNetwork()
 {
@@ -110,21 +113,52 @@ std::vector<float> FunctionNetwork::CalculateOutput(const std::vector<float>& in
 	return outputs;
 }
 
-void FunctionNetwork::Mutate(float mutation_rate)
+void FunctionNetwork::Mutate(float mutation_rate, float mutation_sigma)
 {
+  	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+	generator_ = std::default_random_engine(seed);
+	
 	int n_input_weights = (hidden_layer_size_ + 1) * input_size_;
 	int n_output_weights = (output_size_ + 1) * hidden_layer_size_;
 	
-	std::uniform_int_distribution<int> index_distribution(0, n_input_weights + n_output_weights);
-	std::normal_distribution<float> mutation_distribution(0.0f, mutation_rate);
+	std::uniform_real_distribution<float> mutate_distribution(0.0f, 1.0f);
+	std::normal_distribution<float> mutation_distribution(0.0f, mutation_sigma);
 
+
+	for (int i = 0; i < n_input_weights; ++i)
+	{
+		if (mutate_distribution(generator_) <= mutation_rate)
+		{
+			float mutation = mutation_distribution(generator_);
+			//std::cout << "Mutate " << i << " with " << mutation << std::endl;
+			input_weights_[i] += mutation;
+		}
+	}
+
+	for (int i = 0; i < n_output_weights; ++i)
+	{
+		if (mutate_distribution(generator_) <= mutation_rate)
+		{
+			float mutation = mutation_distribution(generator_);
+			//std::cout << "Mutate " << i << " with " << mutation << std::endl;
+			output_weights_[i] += mutation;
+		}
+	}
+
+/*
+	for (int i = 0; i < n_output_weights; ++i)
+	{
+		std::cout << "Weight " << i << " = " << output_weights_[i] << std::endl;
+	}
+*/
+/*
 	int mutation_index = index_distribution(generator_);
-	float mutation = mutation_distribution(generator_);
 
 	if (mutation_index < n_input_weights)
 		input_weights_[mutation_index] += mutation;
 	else
 		output_weights_[mutation_index - n_input_weights] += mutation;
+		*/
 }
 
 float FunctionNetwork::UnipolarSigmoidal(float x)

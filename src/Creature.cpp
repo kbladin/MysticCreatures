@@ -6,17 +6,46 @@
 #include "glm/glm.hpp"
 #include "FunctionNetwork.h"
 
+PerformanceStats::PerformanceStats()
+{
+	accum_dist = 0;
+	dist = 0;
+}
+
 Creature::Creature()
 {
 	read_buffer_ = 0;
 	write_buffer_ = 1;
 
-	InstantiateSimpleCreature();
+	InstantiateWormCreature();
+	brain_ = FunctionNetwork(
+	n_vertices_ + n_edges_,
+	10,
+	n_edges_);
 }
-
+/*
+Creature::Creature(const Creature& c)
+{
+	brain_ = c.brain_;
+	world_ = c.world_;
+}
+*/
 Creature::~Creature()
 {
 	//delete brain_;
+}
+
+void Creature::ResetState()
+{
+	stats_.dist = 0;
+	stats_.accum_dist = 0;
+	InstantiateWormCreature();
+	for (int i = 0; i < n_vertices_; ++i)
+	{
+		vertices_[read_buffer_][i].ZeroForce();
+		vertices_[read_buffer_][i].ZeroNormal();
+		vertices_[read_buffer_][i].ZeroVelocity();
+	}
 }
 
 void Creature::SetWorld(SimWorld* world)
@@ -28,8 +57,10 @@ void Creature::InstantiateSimpleCreature()
 {
 	for (int buffer_index = 0; buffer_index < 2; ++buffer_index)
 	{
-		edges_[buffer_index].resize(3);
-		vertices_[buffer_index].resize(3);
+		n_edges_ = 3;
+		n_vertices_ = 3;
+		edges_[buffer_index].resize(n_edges_);
+		vertices_[buffer_index].resize(n_vertices_);
 
 		vertices_[buffer_index][0].SetPosition(glm::vec2(0.1f, 0.1f));
 		vertices_[buffer_index][1].SetPosition(glm::vec2(-0.1f, -0.1f));
@@ -45,17 +76,98 @@ void Creature::InstantiateSimpleCreature()
 		edges_[buffer_index][1].SetVertices(&vertices_[buffer_index][1], &vertices_[buffer_index][2]);
 		edges_[buffer_index][2].SetVertices(&vertices_[buffer_index][2], &vertices_[buffer_index][0]);
 
+		edges_[buffer_index][0].SetOnEdge(true);
+		edges_[buffer_index][1].SetOnEdge(true);
+		edges_[buffer_index][2].SetOnEdge(true);
+
+
+		for (int i = 0; i < edges_[buffer_index].size(); ++i)
+		{
+			edges_[buffer_index][i].SetSpringConstant(100.0f);
+			edges_[buffer_index][i].SetDamperConstant(0.0f);
+			edges_[buffer_index][i].SetBaseLength(0.3f);
+			edges_[buffer_index][i].SetStretch(0.02f);
+		}
+	}
+}
+
+void Creature::InstantiateWormCreature()
+{
+	for (int buffer_index = 0; buffer_index < 2; ++buffer_index)
+	{
+		n_edges_ = 16;
+		n_vertices_ = 8;
+		edges_[buffer_index].resize(n_edges_);
+		vertices_[buffer_index].resize(n_vertices_);
+
+		float scale = 0.1;
+
+		vertices_[buffer_index][0].SetPosition(glm::vec2(0.0f, 0.0f) * scale);
+		vertices_[buffer_index][1].SetPosition(glm::vec2(1.0f, 0.0f) * scale);
+		vertices_[buffer_index][2].SetPosition(glm::vec2(2.0f, 0.0f) * scale);
+		vertices_[buffer_index][3].SetPosition(glm::vec2(3.0f, 0.0f) * scale);
+		vertices_[buffer_index][4].SetPosition(glm::vec2(0.0f, -1.0f) * scale);
+		vertices_[buffer_index][5].SetPosition(glm::vec2(1.0f, -1.0f) * scale);
+		vertices_[buffer_index][6].SetPosition(glm::vec2(2.0f, -1.0f) * scale);
+		vertices_[buffer_index][7].SetPosition(glm::vec2(3.0f, -1.0f) * scale);
+
+		for (int i = 0; i < vertices_[buffer_index].size(); ++i)
+		{
+			vertices_[buffer_index][i].SetMass(0.1f);
+			vertices_[buffer_index][i].SetFluidFrictionConstant(0.3f);
+		}
+
+		edges_[buffer_index][0].SetVertices(&vertices_[buffer_index][0], &vertices_[buffer_index][1]);
+		edges_[buffer_index][1].SetVertices(&vertices_[buffer_index][1], &vertices_[buffer_index][2]);
+		edges_[buffer_index][2].SetVertices(&vertices_[buffer_index][2], &vertices_[buffer_index][3]);
+		edges_[buffer_index][3].SetVertices(&vertices_[buffer_index][4], &vertices_[buffer_index][5]);
+		edges_[buffer_index][4].SetVertices(&vertices_[buffer_index][5], &vertices_[buffer_index][6]);
+		edges_[buffer_index][5].SetVertices(&vertices_[buffer_index][6], &vertices_[buffer_index][7]);
+		edges_[buffer_index][6].SetVertices(&vertices_[buffer_index][0], &vertices_[buffer_index][4]);
+		edges_[buffer_index][7].SetVertices(&vertices_[buffer_index][1], &vertices_[buffer_index][5]);
+		edges_[buffer_index][8].SetVertices(&vertices_[buffer_index][2], &vertices_[buffer_index][6]);
+		edges_[buffer_index][9].SetVertices(&vertices_[buffer_index][3], &vertices_[buffer_index][7]);
+		edges_[buffer_index][10].SetVertices(&vertices_[buffer_index][1], &vertices_[buffer_index][4]);
+		edges_[buffer_index][11].SetVertices(&vertices_[buffer_index][2], &vertices_[buffer_index][5]);
+		edges_[buffer_index][12].SetVertices(&vertices_[buffer_index][3], &vertices_[buffer_index][6]);
+		edges_[buffer_index][13].SetVertices(&vertices_[buffer_index][0], &vertices_[buffer_index][5]);
+		edges_[buffer_index][14].SetVertices(&vertices_[buffer_index][1], &vertices_[buffer_index][6]);
+		edges_[buffer_index][15].SetVertices(&vertices_[buffer_index][2], &vertices_[buffer_index][7]);
+
+		edges_[buffer_index][0].SetBaseLength(1 * scale);
+		edges_[buffer_index][1].SetBaseLength(1 * scale);
+		edges_[buffer_index][2].SetBaseLength(1 * scale);
+		edges_[buffer_index][3].SetBaseLength(1 * scale);
+		edges_[buffer_index][4].SetBaseLength(1 * scale);
+		edges_[buffer_index][5].SetBaseLength(1 * scale);
+		edges_[buffer_index][6].SetBaseLength(1 * scale);
+		edges_[buffer_index][7].SetBaseLength(1 * scale);
+		edges_[buffer_index][8].SetBaseLength(1 * scale);
+		edges_[buffer_index][9].SetBaseLength(1 * scale);
+		edges_[buffer_index][10].SetBaseLength(sqrt(2) * scale);
+		edges_[buffer_index][11].SetBaseLength(sqrt(2) * scale);
+		edges_[buffer_index][12].SetBaseLength(sqrt(2) * scale);
+		edges_[buffer_index][13].SetBaseLength(sqrt(2) * scale);
+		edges_[buffer_index][14].SetBaseLength(sqrt(2) * scale);
+		edges_[buffer_index][15].SetBaseLength(sqrt(2) * scale);
+
+		edges_[buffer_index][0].SetOnEdge(true);
+		edges_[buffer_index][1].SetOnEdge(true);
+		edges_[buffer_index][2].SetOnEdge(true);
+		edges_[buffer_index][3].SetOnEdge(true);
+		edges_[buffer_index][4].SetOnEdge(true);
+		edges_[buffer_index][5].SetOnEdge(true);
+		edges_[buffer_index][6].SetOnEdge(true);
+		edges_[buffer_index][9].SetOnEdge(true);
+
 		for (int i = 0; i < edges_[buffer_index].size(); ++i)
 		{
 			edges_[buffer_index][i].SetSpringConstant(50.0f);
-			edges_[buffer_index][i].SetDamperConstant(0.0f);
-			edges_[buffer_index][i].SetLength(0.2f);
+			edges_[buffer_index][i].SetDamperConstant(0.1f);
+			//edges_[buffer_index][i].SetBaseLength(0.3f);
+			edges_[buffer_index][i].SetStretch(0.015f);
 		}
 	}
-	brain_ = new FunctionNetwork(
-		vertices_[read_buffer_].size() + edges_[read_buffer_].size(),
-		10,
-		edges_[read_buffer_].size());
 }
 
 void Creature::SimulateNextStep(float dt)
@@ -66,8 +178,9 @@ void Creature::SimulateNextStep(float dt)
 		// Forces from the world
 	AddWorldForces();
 
-
 	UpdateState(dt);
+
+	UpdateStats(dt);
 
 	//DebugPrint();
 
@@ -82,11 +195,11 @@ void Creature::SwapBuffers()
 
 void Creature::Draw()
 {
-	for (int i = 0; i < edges_[read_buffer_].size(); ++i)
+	for (int i = 0; i < n_edges_; ++i)
 	{
 		edges_[read_buffer_][i].Draw();
 	}
-	for (int i = 0; i < vertices_[read_buffer_].size(); ++i)
+	for (int i = 0; i < n_vertices_; ++i)
 	{
 		glm::vec2 start_point = vertices_[read_buffer_][i].GetPosition();
 		glm::vec2 end_point = vertices_[read_buffer_][i].GetPosition() + vertices_[read_buffer_][i].GetNormal();
@@ -101,7 +214,7 @@ void Creature::Draw()
 
 void Creature::DebugPrint()
 {
-	for (int i = 0; i < vertices_[read_buffer_].size(); ++i)
+	for (int i = 0; i < n_vertices_; ++i)
 	{
 		float x = vertices_[read_buffer_][i].GetPosition().x;
 		float y = vertices_[read_buffer_][i].GetPosition().y;
@@ -116,67 +229,62 @@ void Creature::DebugPrint()
 
 void Creature::ZeroTmpVertexData()
 {
-	for (int i = 0; i < vertices_[read_buffer_].size(); ++i)
+	for (int i = 0; i < n_vertices_; ++i)
 	{
 		vertices_[read_buffer_][i].ZeroForce();
 		vertices_[read_buffer_][i].ZeroNormal();
 	}
 }
 
-void Creature::Mutate(float mutation_rate)
+void Creature::Mutate(float mutation_rate, float mutation_sigma)
 {
-	brain_->Mutate(mutation_rate);
+	brain_.Mutate(mutation_rate, mutation_sigma);
 }
 
 float Creature::GetPerformance() const
 {
-	// Performance is mean distance from edges to target
-	glm::vec2 position_diff(0.0f, 0.0f);
-	int n_vertices = vertices_[read_buffer_].size();
-	for (int i = 0; i < n_vertices; ++i)
-	{
-		position_diff += world_->GetTargetPosition() - vertices_[read_buffer_][i].GetPosition();
-	}
-	return glm::length(position_diff * (1.0f / n_vertices));
+	return stats_.accum_dist;
 }
 
 void Creature::AddWorldForces()
 {
 	// Add forces to all vertices
-	for (int i=0; i < edges_[read_buffer_].size(); ++i)
+	for (int i=0; i < n_edges_; ++i)
 	{
 		glm::vec2 f = edges_[read_buffer_][i].GetSpringForce(world_);
-		glm::vec2 fluid_force1 = edges_[read_buffer_][i].GetFluidResistanceForceVert1(world_);
-		glm::vec2 fluid_force2 = edges_[read_buffer_][i].GetFluidResistanceForceVert2(world_);
-
 		edges_[read_buffer_][i].AddForceToVertices(f);
-		edges_[read_buffer_][i].AddForceToVert1(fluid_force1);
-		edges_[read_buffer_][i].AddForceToVert2(fluid_force2);
+
+		if (edges_[read_buffer_][i].GetOnEdge())
+		{
+			glm::vec2 fluid_force1 = edges_[read_buffer_][i].GetFluidResistanceForceVert1(world_);
+			glm::vec2 fluid_force2 = edges_[read_buffer_][i].GetFluidResistanceForceVert2(world_);
+			edges_[read_buffer_][i].AddForceToVert1(fluid_force1);
+			edges_[read_buffer_][i].AddForceToVert2(fluid_force2);
+		}
 	}
 }
 
 void Creature::AddNeuralNetworkForces() // Should be called update brain instead
 {
-	int n_edges = edges_[read_buffer_].size();
-	int n_vertices = vertices_[read_buffer_].size();
-
-	for (int i = 0; i < n_edges; ++i)
+	for (int i = 0; i < n_edges_; ++i)
 	{
 		glm::vec2 n = edges_[read_buffer_][i].GetDirection();
 		edges_[read_buffer_][i].AddNormalToVertices(-n);
 	}
 
-	for (int i = 0; i < n_vertices; ++i)
+	for (int i = 0; i < n_vertices_; ++i)
 	{
 		vertices_[read_buffer_][i].NormalizeNormal();
 	}
 
 	// Inputs: first direction differences from notmals to target,
 	// then spring lengths
+	//std::cout << "n_vertices_ = " << n_vertices_ << std::endl;
+	//std::cout << "n_edges_ = " << n_edges_ << std::endl;
 	std::vector<float> brain_input(
-		vertices_[read_buffer_].size() +
-		edges_[read_buffer_].size());
-	for (int i = 0; i < n_vertices; ++i)
+		n_vertices_ +
+		n_edges_);
+	for (int i = 0; i < n_vertices_; ++i)
 	{
 		glm::vec2 n = vertices_[read_buffer_][i].GetNormal();
 		glm::vec2 target_diff = world_->GetTargetPosition() - vertices_[read_buffer_][i].GetPosition();
@@ -200,10 +308,10 @@ void Creature::AddNeuralNetworkForces() // Should be called update brain instead
 	}
 
 	// Should be mean = 0
-	for (int i = 0; i < n_edges; ++i)
+	for (int i = 0; i < n_edges_; ++i)
 	{
 		float current_length = edges_[read_buffer_][i].GetCurrentLength();
-		brain_input[n_vertices + i] =
+		brain_input[n_vertices_ + i] =
 			(edges_[read_buffer_][i].GetCurrentLength() -
 			edges_[read_buffer_][i].GetLength()) * 10/current_length;
 	}
@@ -219,7 +327,7 @@ void Creature::AddNeuralNetworkForces() // Should be called update brain instead
 	std::cout << std::endl;
 */
 
-	std::vector<float> brain_output = brain_->CalculateOutput(brain_input);
+	std::vector<float> brain_output = brain_.CalculateOutput(brain_input);
 
 /*
 	std::cout << "Brain output" << std::endl;
@@ -231,27 +339,28 @@ void Creature::AddNeuralNetworkForces() // Should be called update brain instead
 */
 
 	// Update spring length according to the brain
-	for (int i = 0; i < n_edges; ++i)
+	for (int i = 0; i < n_edges_; ++i)
 	{
-		edges_[read_buffer_][i].SetLength(0.2f + ((brain_output[i] - 0.5f)*2) * 0.1f);
+		edges_[read_buffer_][i].SetLength(edges_[read_buffer_][i].GetBaseLength() + ((brain_output[i] - 0.5f)*2) * edges_[read_buffer_][i].GetStretch());
 	}
 }
 
 void Creature::UpdateState(float dt)
 {
-	for (int i = 0; i < vertices_[read_buffer_].size(); ++i)
+	for (int i = 0; i < n_vertices_; ++i)
 	{
 		vertices_[read_buffer_][i].SetVelocity(vertices_[read_buffer_][i].GetNextVelocity(dt));
 		vertices_[read_buffer_][i].SetPosition(vertices_[read_buffer_][i].GetNextPosition(dt));
 	}
 }
 
-bool Creature::operator<(const Creature c) const
+void Creature::UpdateStats(float dt)
 {
-	return GetPerformance() < c.GetPerformance();
-}
-
-bool Creature::operator>(const Creature c) const
-{
-	return GetPerformance() > c.GetPerformance();
+	glm::vec2 position_diff(0.0f, 0.0f);
+	for (int i = 0; i < n_vertices_; ++i)
+	{
+		position_diff += world_->GetTargetPosition() - vertices_[read_buffer_][i].GetPosition();
+	}
+	stats_.dist = glm::length(position_diff * (1.0f / n_vertices_));
+	stats_.accum_dist += stats_.dist * dt;
 }
