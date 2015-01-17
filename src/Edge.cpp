@@ -36,7 +36,7 @@ glm::vec2 Edge::GetFluidResistanceForceVert1(SimWorld* world)
 	glm::vec2 dir = GetDirection();
 	glm::vec2 force_dir(dir.y, -dir.x);
 	glm::vec2 total_flow = world->GetCurrent(vert1_->GetPosition()) - vert1_->GetVelocity();
-	return vert1_->GetFluidFrictionConstant() * glm::dot(total_flow, force_dir) * force_dir;
+	return vert1_->GetFluidFrictionConstant() * static_cast<float>( pow(glm::dot(total_flow, force_dir), 3)) * force_dir;
 }
 
 glm::vec2 Edge::GetFluidResistanceForceVert2(SimWorld* world)
@@ -44,13 +44,13 @@ glm::vec2 Edge::GetFluidResistanceForceVert2(SimWorld* world)
 	glm::vec2 dir = GetDirection();
 	glm::vec2 force_dir(dir.y, -dir.x);
 	glm::vec2 total_flow = world->GetCurrent(vert2_->GetPosition()) - vert2_->GetVelocity();
-	return vert2_->GetFluidFrictionConstant() * glm::dot(total_flow, force_dir) * force_dir;
+	return vert2_->GetFluidFrictionConstant() * static_cast<float>( pow(glm::dot(total_flow, force_dir), 3)) * force_dir;
 }
 
 glm::vec2 Edge::GetDirection()
 {
 	glm::vec2 position_diff = vert2_->GetPosition() - vert1_->GetPosition();
-	if (position_diff == glm::vec2(0.0f,0.0f))
+	if (position_diff != position_diff || position_diff == glm::vec2(0.0f,0.0f))
 		return glm::vec2(0.0f,0.0f);
 	else
 		return glm::normalize(position_diff);

@@ -114,7 +114,7 @@ void Creature::InstantiateWormCreature()
 		for (int i = 0; i < vertices_[buffer_index].size(); ++i)
 		{
 			vertices_[buffer_index][i].SetMass(0.1f);
-			vertices_[buffer_index][i].SetFluidFrictionConstant(0.3f);
+			vertices_[buffer_index][i].SetFluidFrictionConstant(1.0f);
 		}
 
 		edges_[buffer_index][0].SetVertices(&vertices_[buffer_index][0], &vertices_[buffer_index][1]);
@@ -163,9 +163,9 @@ void Creature::InstantiateWormCreature()
 		for (int i = 0; i < edges_[buffer_index].size(); ++i)
 		{
 			edges_[buffer_index][i].SetSpringConstant(50.0f);
-			edges_[buffer_index][i].SetDamperConstant(0.1f);
+			edges_[buffer_index][i].SetDamperConstant(3.0f);
 			//edges_[buffer_index][i].SetBaseLength(0.3f);
-			edges_[buffer_index][i].SetStretch(0.015f);
+			edges_[buffer_index][i].SetStretch(0.04f);
 		}
 	}
 }
@@ -289,7 +289,7 @@ void Creature::AddNeuralNetworkForces() // Should be called update brain instead
 		glm::vec2 n = vertices_[read_buffer_][i].GetNormal();
 		glm::vec2 target_diff = world_->GetTargetPosition() - vertices_[read_buffer_][i].GetPosition();
 		glm::vec2 target_dir;
-		if (target_diff == glm::vec2(0.0f, 0.0f))
+		if (target_diff != target_diff || target_diff == glm::vec2(0.0f, 0.0f))
 			target_dir = glm::vec2(0.0f, 0.0f);
 		else
 			target_dir = glm::normalize(target_diff);
@@ -312,8 +312,8 @@ void Creature::AddNeuralNetworkForces() // Should be called update brain instead
 	{
 		float current_length = edges_[read_buffer_][i].GetCurrentLength();
 		brain_input[n_vertices_ + i] =
-			(edges_[read_buffer_][i].GetCurrentLength() -
-			edges_[read_buffer_][i].GetLength()) * 10/current_length;
+			(current_length - edges_[read_buffer_][i].GetLength()) *
+			10/current_length;
 	}
 
 	brain_input.push_back(-1.0f); // threshold input

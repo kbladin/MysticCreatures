@@ -30,7 +30,7 @@ void MouseButtonFun(GLFWwindow * window, int button, int action, int mods){
 int main()
 {
 	const int population_size = 100;
-	const int n_generations = 100;
+	int n_generations;// = 300;
     const float elitism = 0.3;
     const float mutation_rate = 0.2;
     const float mutation_sigma = 0.5;
@@ -63,6 +63,12 @@ int main()
         population[i] = new Creature();
         population[i]->SetWorld(world);//) = &population[i];
     }
+
+    do{
+
+        std::cout << "Enter number of generations: ";
+    }
+    while (!(std::cin >> n_generations));
 
     for (int i = 0; i < n_generations; ++i)
     {
@@ -140,7 +146,16 @@ int main()
 
 
     std::cout << "Simulation finished!" << std::endl;
+
+    std::string finished;
+    do {
+        std::cout << "Continue? (y/n): ";
+    }
+    while(!(std::cin >> finished) && (finished.compare(std::string("y")) > 0 ));
+
     std::cout << "Now simulating the best creature" << std::endl;
+
+    std::cout << finished << std::endl;
 
 
     Creature creature = *population[0];
